@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 // Handler implements the slog.Handler interface, with additional
@@ -97,6 +98,7 @@ func (h *Handler) Handle(_ context.Context, record slog.Record) error {
 		level:      record.Level,
 		stacktrace: string(debug.Stack()),
 		attrs:      map[string]slog.Value{},
+		time:       record.Time,
 	}
 
 	var f func(group []string, attr slog.Attr) bool
@@ -169,6 +171,9 @@ type logMessage struct {
 	stacktrace string
 	// key is the slash-encoded group path to this value
 	attrs map[string]slog.Value
+	// this package deliberately ignores this, but passing
+	// testing/slogtest requires us to store this
+	time time.Time
 }
 
 func (lm *logMessage) print(w io.Writer) {
