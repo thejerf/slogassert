@@ -1,3 +1,30 @@
+/*
+Package slogassert provides a slog Handler that allows testing that
+expected logging messages were made in your test code.
+
+# Normal Usage
+
+Normal usage looks like this:
+
+	func TestSomething(t *testing.T) {
+	     // This automatically registers a Cleanup function to assert
+	     // that all log messages are accounted for.
+	     handler := slogassert.New(t, slog.LevelWarn)
+	     logger := slog.New(handler)
+
+	     // inject the logger into your test code and run it
+
+	     // Now start asserting things:
+	     handler.AssertSomeOf("some log message")
+
+	     // automatically at the end of your function, an
+	     // assertion will run that all log messages are accounted
+	     // for.
+	}
+
+A variety of assertions at varying levels of detail are available on
+the Handler.
+*/
 package slogassert
 
 import (
@@ -5,7 +32,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 	"runtime/debug"
 	"sort"
 	"strings"
@@ -143,28 +169,6 @@ func (h *Handler) child() *Handler {
 	}
 }
 
-// AssertEmpty asserts that all log messages have now been accounted
-// for and there is nothing left.
-//
-// A call to this method will be automatically deferred through the
-// testing system if you use New(), but you can also use New
-func (h *Handler) AssertEmpty() {
-	h = h.root()
-	h.m.Lock()
-	defer h.m.Unlock()
-
-	if len(h.logMessages) == 0 {
-		return
-	}
-
-	for _, lm := range h.logMessages {
-		lm.print(os.Stderr)
-	}
-
-	h.t.Fatalf("%d unasserted log message(s); see printout above",
-		len(h.logMessages))
-}
-
 type logMessage struct {
 	message    string
 	level      slog.Level
@@ -239,11 +243,11 @@ func (ga *groupedAttrs) clone() *groupedAttrs {
 	return new
 }
 
-func slashEncode(s string) string {
+func dotEncode(s string) string {
 	return strings.ReplaceAll(
 		strings.ReplaceAll(s, "\\", "\\\\"),
-		"/",
-		"\\/",
+		".",
+		"\\.",
 	)
 }
 
@@ -253,8 +257,8 @@ func slashEncode(s string) string {
 func encgroups(group []string, key string) string {
 	converted := make([]string, len(group)+1)
 	for i := 0; i < len(group); i++ {
-		converted[i] = slashEncode(group[i])
+		converted[i] = dotEncode(group[i])
 	}
-	converted[len(converted)-1] = slashEncode(key)
-	return strings.Join(converted, "/")
+	converted[len(converted)-1] = dotEncode(key)
+	return strings.Join(converted, ".")
 }
