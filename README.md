@@ -37,51 +37,25 @@ be done in normal logging are done, like taking a full stack trace at
 the location of all log messages that are recorded. This assists in
 diagnosing where any unasserted log messages are coming from.
 
+See [usage in the godoc](https://pkg.go.dev/github.com/thejerf/slogassert).
+
 ## Release Status
 
 `slogassert` is **super alpha**. I reserve the right to
 change _everything_ as I continue to work out how to correctly write
 slog handlers.
 
-In fact, as you read this, it doesn't even quite work yet.
+As you read this, I'm basically committing stuff with enough version
+information that I can pull it into some repos I'll be working with
+to test this out.
 
-Please do try it out and give it a test.
-
-## Normal Usage
-
-Normal usage looks like this:
-
-    func TestSomething(t *testing.T) {
-        // t is a *testing.T, slogtest uses this to register a
-        // t.Cleanup function to assert that the log is empty
-        st := slogtest.New(t, slog.LevelWarn)
-        logger := slog.New(st)
-
-        // inject the logger into your test code and run it
-
-        // Now start asserting things:
-        
-If you have something like a slog handler that consumes information
-from a context to decorate log messages, you may need to compose that
-into the slogtest handler. The slogtest handler should be at the
-"bottom" of any stack of loggers, in place of the final output
-handler. You can also choose to simply leave it out, as it will
-simplify testing, if you have it tested elsewhere.
-
-## Usage Hints
-
-I think you'll find you want the textual portion of your log messages
-to be constants in the relevant packages.
+The code is covered as much as possible, however it is not possible to
+directly test covering the code that calls fatal errors, so that code
+can not be covered or directly tested.
 
 ## Version Numbering
 
-This package will not go to 1.0 until `slog` does. That 1.0 will be
-pointed at the final standard library version as its dependency.
-
-Until then, this package by necessity can't be more stable than `slog`
-itself. The latest version will track `slog`'s latest version. If it
-happens to diverge in a way that makes this stop working, please file
-an Issue.
+This repository will use semantic versioning.
 
 I will be signing this repository with the ["jerf" keybase
 account](https://keybase.io/jerf). If you are viewing this repository
@@ -94,6 +68,8 @@ one is signed.)
 
 ## Version History
 
+* v0.0.2
+  * README fixup.
 * v0.0.1
   * Initial release.
 
