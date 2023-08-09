@@ -101,7 +101,7 @@ func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
 // the LogMessageMatch criteria.
 func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) {
 	matches := h.filter(func(lm logMessage) (bool, bool) {
-		return lmm.matches(lm), false
+		return lmm.matches(lm), true
 	})
 	if matches == 0 {
 		h.t.Fatal("No logs matching filter were found")
@@ -210,7 +210,7 @@ func (h *Handler) filter(f func(logMessage) (bool, bool)) int {
 
 		if !keepMatching {
 			// save off the rest of the messages
-			newMessages = append(newMessages, root.logMessages[idx:]...)
+			newMessages = append(newMessages, root.logMessages[idx+1:]...)
 			break
 		}
 	}

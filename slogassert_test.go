@@ -70,7 +70,7 @@ func TestWithoutCleanup(t *testing.T) {
 }
 
 func TestAssertSomeMessage(t *testing.T) {
-	handler := NewWithoutCleanup(t, slog.LevelWarn)
+	handler := New(t, slog.LevelWarn)
 	log := slog.New(handler)
 	log.Warn(testWarning)
 	log.Warn(testWarning)
@@ -81,7 +81,7 @@ func TestAssertSomeMessage(t *testing.T) {
 }
 
 func TestAssertMessage(t *testing.T) {
-	handler := NewWithoutCleanup(t, slog.LevelWarn)
+	handler := New(t, slog.LevelWarn)
 	log := slog.New(handler)
 	log.Warn(testWarning)
 
@@ -90,7 +90,7 @@ func TestAssertMessage(t *testing.T) {
 }
 
 func TestAssertSomeMessageLevel(t *testing.T) {
-	handler := NewWithoutCleanup(t, slog.LevelWarn)
+	handler := New(t, slog.LevelWarn)
 	log := slog.New(handler)
 	log.Warn(testWarning)
 	log.Warn(testWarning)
@@ -101,7 +101,7 @@ func TestAssertSomeMessageLevel(t *testing.T) {
 }
 
 func TestAssertPrecise(t *testing.T) {
-	handler := NewWithoutCleanup(t, slog.LevelWarn)
+	handler := New(t, slog.LevelWarn)
 	log := slog.New(handler)
 	log.Warn(testWarning, "key", "val")
 
@@ -117,7 +117,7 @@ func TestAssertPrecise(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-	handler := NewWithoutCleanup(t, slog.LevelWarn)
+	handler := New(t, slog.LevelWarn)
 	log := slog.New(handler)
 	log.Warn(testWarning, "key", "val")
 
@@ -126,7 +126,7 @@ func TestReset(t *testing.T) {
 }
 
 func TestFiltering(t *testing.T) {
-	handler := NewWithoutCleanup(t, slog.LevelWarn)
+	handler := New(t, slog.LevelWarn)
 	log := slog.New(handler)
 
 	log.Warn(testWarning)
@@ -141,7 +141,7 @@ func TestFiltering(t *testing.T) {
 }
 
 func TestAssertSomePrecise(t *testing.T) {
-	handler := NewWithoutCleanup(t, slog.LevelWarn)
+	handler := New(t, slog.LevelWarn)
 	log := slog.New(handler)
 	log.Warn(testWarning, "key", "val")
 	log.Warn(testWarning, "key", "val")
@@ -159,7 +159,7 @@ func TestAssertSomePrecise(t *testing.T) {
 }
 
 func TestAssertMessageLevel(t *testing.T) {
-	handler := NewWithoutCleanup(t, slog.LevelWarn)
+	handler := New(t, slog.LevelWarn)
 	log := slog.New(handler)
 	log.Warn(testWarning)
 

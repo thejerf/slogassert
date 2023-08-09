@@ -68,6 +68,8 @@ one is signed.)
 
 ## Version History
 
+* v0.0.3:
+  * Bugs! Bugs everywhere! Fewer now, but still no promises.
 * v0.0.2
   * README fixup.
 * v0.0.1
