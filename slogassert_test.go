@@ -167,6 +167,36 @@ func TestAssertMessageLevel(t *testing.T) {
 	// does not crash because the message is consumed
 }
 
+func TestLogValuer(t *testing.T) {
+	handler := New(t, slog.LevelWarn)
+	log := slog.New(handler)
+	log.Warn(testWarning,
+		"valuer", testLogValuer{},
+		slog.Group("group", "subgroup", testLogValuer{}),
+	)
+
+	handler.AssertPrecise(LogMessageMatch{
+		Message: testWarning,
+		Level:   slog.LevelWarn,
+		Attrs: map[string]any{
+			"valuer.a":         "a",
+			"valuer.b":         "b",
+			"group.subgroup.a": "a",
+			"group.subgroup.b": "b",
+		},
+		AllAttrsMatch: true,
+	})
+}
+
+type testLogValuer struct{}
+
+func (t testLogValuer) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("a", "a"),
+		slog.String("b", "b"),
+	)
+}
+
 // various little assertions to cover the code
 func TestCoverage(t *testing.T) {
 	panics(t, "New with nil", func() { New(nil, slog.LevelWarn) })

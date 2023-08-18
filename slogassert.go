@@ -129,15 +129,18 @@ func (h *Handler) Handle(_ context.Context, record slog.Record) error {
 
 	var f func(group []string, attr slog.Attr) bool
 	f = func(group []string, attr slog.Attr) bool {
-		if attr.Value.Kind() == slog.KindGroup {
+		val := attr.Value.Resolve()
+		switch val.Kind() {
+		case slog.KindGroup:
 			groupName := attr.Key
-			attrs := attr.Value.Group()
+			attrs := val.Group()
 			newGroups := append(append([]string{}, group...), groupName)
 			for _, attr := range attrs {
 				f(newGroups, attr)
 			}
-		} else {
-			lm.attrs[encgroups(group, attr.Key)] = attr.Value
+
+		default:
+			lm.attrs[encgroups(group, attr.Key)] = val
 		}
 		return true
 	}

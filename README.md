@@ -68,6 +68,9 @@ one is signed.)
 
 ## Version History
 
+* v0.0.4:
+  * Handlers are responsible for resolving LogValuer values.
+    * This is why you don't promise no bugs.
 * v0.0.3:
   * Bugs! Bugs everywhere! Fewer now, but still no promises.
 * v0.0.2
