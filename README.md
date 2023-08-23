@@ -68,6 +68,10 @@ one is signed.)
 
 ## Version History
 
+* v0.0.5:
+  * Add a NullHandler and NullLogger. This is not 100% on point for
+    the package, but pretty useful for when you need a logger but
+    don't need the logs, which comes up in testing a lot.
 * v0.0.4:
   * Handlers are responsible for resolving LogValuer values.
     * This is why you don't promise no bugs.
