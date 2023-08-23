@@ -68,6 +68,14 @@ one is signed.)
 
 ## Version History
 
+* v0.0.6:
+  * *BREAKING RELEASE*: The ability to wrap a handler is added.
+    This is useful for things like recording all the logs in a test
+    into a wrapped handler, then if the test fails, printing out the
+    logs as part of the test failure message. This changes the
+    signature on `New` and `NewWithoutCleanup`.
+    
+    To recover previous behavior, add a `nil` on the end of all such calls.
 * v0.0.5:
   * Add a NullHandler and NullLogger. This is not 100% on point for
     the package, but pretty useful for when you need a logger but

@@ -47,6 +47,8 @@ type Handler struct {
 	// all children loggers need to defer farther down
 	parent *Handler
 
+	wrapped slog.Handler
+
 	errToInject error
 
 	leveler      slog.Leveler
@@ -65,7 +67,10 @@ type Handler struct {
 // This will automatically call a t.Cleanup to assert that the logger
 // is empty. If you want to do this manually or not at all, call
 // NewWithoutCleanup.
-func New(t *testing.T, leveler slog.Leveler) *Handler {
+//
+// If wrapped is not nil, Handle calls will be passed down to that
+// handler as well.
+func New(t *testing.T, leveler slog.Leveler, wrapped slog.Handler) *Handler {
 	if t == nil {
 		panic("t must not be nil for a slogtest.Handler")
 	}
@@ -73,6 +78,7 @@ func New(t *testing.T, leveler slog.Leveler) *Handler {
 		leveler: leveler,
 		attrs:   &groupedAttrs{groups: map[string]*groupedAttrs{}},
 		t:       t,
+		wrapped: wrapped,
 	}
 	t.Cleanup(handler.AssertEmpty)
 	return handler
@@ -82,7 +88,10 @@ func New(t *testing.T, leveler slog.Leveler) *Handler {
 //
 // This does not automatically register a cleanup function to assert
 // that the logger is empty.
-func NewWithoutCleanup(t *testing.T, leveler slog.Leveler) *Handler {
+//
+// If wrapped is not nil, Handle calls will be passed down to that
+// handler as well.
+func NewWithoutCleanup(t *testing.T, leveler slog.Leveler, wrapped slog.Handler) *Handler {
 	if t == nil {
 		panic("t must not be nil for a slogtest.Handler")
 	}
@@ -90,6 +99,7 @@ func NewWithoutCleanup(t *testing.T, leveler slog.Leveler) *Handler {
 		leveler: leveler,
 		attrs:   &groupedAttrs{groups: map[string]*groupedAttrs{}},
 		t:       t,
+		wrapped: wrapped,
 	}
 	return handler
 }
@@ -118,7 +128,7 @@ func (h *Handler) Enabled(_ context.Context, level slog.Level) bool {
 
 // Handle implements slog.Handler, recording a log message into the
 // root handler.
-func (h *Handler) Handle(_ context.Context, record slog.Record) error {
+func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	lm := logMessage{
 		message:    record.Message,
 		level:      record.Level,
@@ -153,6 +163,11 @@ func (h *Handler) Handle(_ context.Context, record slog.Record) error {
 	root.m.Lock()
 	root.logMessages = append(root.logMessages, lm)
 	root.m.Unlock()
+
+	if h.wrapped != nil {
+		return h.wrapped.Handle(ctx, record)
+	}
+
 	return nil
 }
 
@@ -169,6 +184,7 @@ func (h *Handler) child() *Handler {
 		currentGroup: append([]string{}, h.currentGroup...),
 		attrs:        h.attrs.clone(),
 		leveler:      h.leveler,
+		wrapped:      h.wrapped,
 	}
 }
 
