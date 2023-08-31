@@ -31,7 +31,7 @@ func (h *Handler) AssertEmpty() {
 
 	// uncoverable past this point due to Fatalf
 	for _, lm := range h.logMessages {
-		lm.print(os.Stderr)
+		lm.Print(os.Stderr)
 	}
 
 	h.t.Fatalf("%d unasserted log message(s); see printout above",
@@ -41,8 +41,8 @@ func (h *Handler) AssertEmpty() {
 // AssertSomeMessage asserts that some logging events were recorded
 // with the given message.
 func (h *Handler) AssertSomeMessage(msg string) {
-	matches := h.filter(func(lm logMessage) (bool, bool) {
-		return lm.message == msg, true
+	matches := h.filter(func(lm LogMessage) (bool, bool) {
+		return lm.Message == msg, true
 	})
 	if matches == 0 {
 		h.t.Fatalf("No logs with message %q found", msg)
@@ -52,8 +52,8 @@ func (h *Handler) AssertSomeMessage(msg string) {
 // AssertMessage asserts a logging message recorded with the giving
 // logging message.
 func (h *Handler) AssertMessage(msg string) {
-	matches := h.filter(func(lm logMessage) (bool, bool) {
-		match := lm.message == msg
+	matches := h.filter(func(lm LogMessage) (bool, bool) {
+		match := lm.Message == msg
 		return match, !match
 	})
 	if matches == 0 {
@@ -65,8 +65,8 @@ func (h *Handler) AssertMessage(msg string) {
 // logging events were recorded with the given message, at the given
 // logging level.
 func (h *Handler) AssertSomeMessageLevel(msg string, level slog.Level) {
-	matches := h.filter(func(lm logMessage) (bool, bool) {
-		return lm.message == msg && lm.level == level, true
+	matches := h.filter(func(lm LogMessage) (bool, bool) {
+		return lm.Message == msg && lm.Level == level, true
 	})
 	if matches == 0 {
 		h.t.Fatalf("No logs with message %q and level %s found", msg, level)
@@ -76,8 +76,8 @@ func (h *Handler) AssertSomeMessageLevel(msg string, level slog.Level) {
 // AssertMessageLevel asserts a logging message with the given message
 // and level.
 func (h *Handler) AssertMessageLevel(msg string, level slog.Level) {
-	matches := h.filter(func(lm logMessage) (bool, bool) {
-		matches := lm.message == msg && lm.level == level
+	matches := h.filter(func(lm LogMessage) (bool, bool) {
+		matches := lm.Message == msg && lm.Level == level
 		return matches, !matches
 	})
 	if matches == 0 {
@@ -88,7 +88,7 @@ func (h *Handler) AssertMessageLevel(msg string, level slog.Level) {
 // AssertPrecise takes a LogMessageMatch and asserts the first log
 // message that matches it.
 func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
-	matches := h.filter(func(lm logMessage) (bool, bool) {
+	matches := h.filter(func(lm LogMessage) (bool, bool) {
 		matches := lmm.matches(lm)
 		return matches, !matches
 	})
@@ -100,7 +100,7 @@ func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
 // AssertSomePrecise asserts all the messages in the log that match
 // the LogMessageMatch criteria.
 func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) {
-	matches := h.filter(func(lm logMessage) (bool, bool) {
+	matches := h.filter(func(lm LogMessage) (bool, bool) {
 		return lmm.matches(lm), true
 	})
 	if matches == 0 {
@@ -153,16 +153,16 @@ type LogMessageMatch struct {
 	AllAttrsMatch bool
 }
 
-func (lmm LogMessageMatch) matches(lm logMessage) bool {
-	if lmm.Message != lm.message {
+func (lmm LogMessageMatch) matches(lm LogMessage) bool {
+	if lmm.Message != lm.Message {
 		return false
 	}
-	if lmm.Level != LevelDontCare && lmm.Level != lm.level {
+	if lmm.Level != LevelDontCare && lmm.Level != lm.Level {
 		return false
 	}
 
 	for key, matcher := range lmm.Attrs {
-		val, haveVal := lm.attrs[key]
+		val, haveVal := lm.Attrs[key]
 		if !haveVal {
 			// mandatory attribute missing
 			return false
@@ -172,11 +172,28 @@ func (lmm LogMessageMatch) matches(lm logMessage) bool {
 		}
 	}
 
-	if lmm.AllAttrsMatch && len(lmm.Attrs) != len(lm.attrs) {
+	if lmm.AllAttrsMatch && len(lmm.Attrs) != len(lm.Attrs) {
 		return false
 	}
 
 	return true
+}
+
+// Unasserted returns all the log messages that are currently
+// unasserted within the slog assert. This method does NOT assert
+// them; after this method call all messages will all still fail on
+// an AssertEmpty call.
+//
+// It is probably superficially tempting to just use this and examine
+// the result with code. However, bear in mind that using the
+// assertion functions in conjuction with the default AssertEmpty on
+// test cleanup already handles making sure everything is
+// asserted. There's a lot of bugs easy to write with direct code
+// examination.
+//
+// However, sometimes you just need to check the messages with code.
+func (h *Handler) Unasserted() []LogMessage {
+	return append([]LogMessage{}, h.logMessages...)
 }
 
 // Reset will simply empty out the log entirely. This can be used in
@@ -193,11 +210,11 @@ func (h *Handler) Reset() {
 // filter removes from our logMessages anything that returns true.
 //
 // The returned int is the number of matches that occurred.
-func (h *Handler) filter(f func(logMessage) (bool, bool)) int {
+func (h *Handler) filter(f func(LogMessage) (bool, bool)) int {
 	root := h.root()
 	root.m.Lock()
 	defer root.m.Unlock()
-	newMessages := []logMessage{}
+	newMessages := []LogMessage{}
 
 	matchCount := 0
 	for idx, lm := range root.logMessages {

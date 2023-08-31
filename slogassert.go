@@ -49,15 +49,13 @@ type Handler struct {
 
 	wrapped slog.Handler
 
-	errToInject error
-
 	leveler      slog.Leveler
 	currentGroup []string
 	// group -> attrs in that group, "" = default group
 	attrs *groupedAttrs
 
 	m           sync.Mutex
-	logMessages []logMessage
+	logMessages []LogMessage
 
 	t *testing.T
 }
@@ -129,12 +127,12 @@ func (h *Handler) Enabled(_ context.Context, level slog.Level) bool {
 // Handle implements slog.Handler, recording a log message into the
 // root handler.
 func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
-	lm := logMessage{
-		message:    record.Message,
-		level:      record.Level,
-		stacktrace: string(debug.Stack()),
-		attrs:      map[string]slog.Value{},
-		time:       record.Time,
+	lm := LogMessage{
+		Message:    record.Message,
+		Level:      record.Level,
+		Stacktrace: string(debug.Stack()),
+		Attrs:      map[string]slog.Value{},
+		Time:       record.Time,
 	}
 
 	var f func(group []string, attr slog.Attr) bool
@@ -150,7 +148,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 			}
 
 		default:
-			lm.attrs[encgroups(group, attr.Key)] = val
+			lm.Attrs[encgroups(group, attr.Key)] = val
 		}
 		return true
 	}
@@ -188,31 +186,35 @@ func (h *Handler) child() *Handler {
 	}
 }
 
-type logMessage struct {
-	message    string
-	level      slog.Level
-	stacktrace string
+// LogMessage is a struct for storing the log messages picked up by
+// slogassert's handler.
+type LogMessage struct {
+	Message    string
+	Level      slog.Level
+	Stacktrace string
 	// key is the slash-encoded group path to this value
-	attrs map[string]slog.Value
+	Attrs map[string]slog.Value
 	// this package deliberately ignores this, but passing
 	// testing/slogtest requires us to store this
-	time time.Time
+	Time time.Time
 }
 
-func (lm *logMessage) print(w io.Writer) {
+// Print is a default method that can dump a LogMessage out to a
+// writer; this is used by slogassert to print unasserted log messages.
+func (lm *LogMessage) Print(w io.Writer) {
 	msg := strings.Builder{}
 	msg.WriteString("--------\nmessage:    ")
-	msg.WriteString(lm.message)
+	msg.WriteString(lm.Message)
 	msg.WriteString("\nlevel:      ")
-	msg.WriteString(lm.level.String())
+	msg.WriteString(lm.Level.String())
 	msg.WriteString("\nattributes:\n")
 	keys := []string{}
-	for attrKey := range lm.attrs {
+	for attrKey := range lm.Attrs {
 		keys = append(keys, attrKey)
 	}
 	sort.Strings(keys)
 	for _, key := range keys {
-		val := lm.attrs[key]
+		val := lm.Attrs[key]
 		msg.WriteString("  ")
 		msg.WriteString(key)
 		msg.WriteString(" -> (")
@@ -222,7 +224,7 @@ func (lm *logMessage) print(w io.Writer) {
 		msg.WriteString("\n")
 	}
 	msg.WriteString("\nstack trace:\n")
-	msg.WriteString(lm.stacktrace)
+	msg.WriteString(lm.Stacktrace)
 	msg.WriteString("\n")
 	_, _ = w.Write([]byte(msg.String()))
 }

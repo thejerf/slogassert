@@ -68,6 +68,9 @@ one is signed.)
 
 ## Version History
 
+* v0.0.7:
+  * Add Unasserted call. I've resisted this because it's kind of a
+    trap, but sometimes you just need it.
 * v0.0.6:
   * *BREAKING RELEASE*: The ability to wrap a handler is added.
     This is useful for things like recording all the logs in a test

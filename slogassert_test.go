@@ -2,6 +2,7 @@ package slogassert
 
 import (
 	"log/slog"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -46,15 +47,15 @@ func TestSlogHandler(t *testing.T) {
 			handler.logMessages = handler.logMessages[:0]
 
 			result := map[string]any{
-				slog.TimeKey:    lm.time,
-				slog.LevelKey:   lm.level,
-				slog.MessageKey: lm.message,
+				slog.TimeKey:    lm.Time,
+				slog.LevelKey:   lm.Level,
+				slog.MessageKey: lm.Message,
 			}
 			results = append(results, result)
 		}
 
 		// empty out the results for next time
-		handler.logMessages = []logMessage{}
+		handler.logMessages = []LogMessage{}
 		return results
 	})
 	if err != nil {
@@ -74,6 +75,23 @@ func TestAssertSomeMessage(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
 	log := slog.New(handler)
 	log.Warn(testWarning)
+
+	msgs := handler.Unasserted()
+	if len(msgs) != 1 {
+		t.Fatal("incorrect number of unasserted messages")
+	}
+	msgs[0].Time = time.Time{}
+	msgs[0].Stacktrace = ""
+	if !reflect.DeepEqual(msgs, []LogMessage{
+		{
+			Message: testWarning,
+			Level:   slog.LevelWarn,
+			Attrs:   map[string]slog.Value{},
+		},
+	}) {
+		t.Fatal("incorrect return for Unasserted")
+	}
+
 	log.Warn(testWarning)
 	log.Warn(testWarning)
 
