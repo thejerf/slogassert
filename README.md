@@ -68,6 +68,9 @@ one is signed.)
 
 ## Version History
 
+* v0.0.8:
+  * Make Unasserted return a fully independent copy of the LogMessage
+    so the user can't accidentally corrupt it.
 * v0.0.7:
   * Add Unasserted call. I've resisted this because it's kind of a
     trap, but sometimes you just need it.
