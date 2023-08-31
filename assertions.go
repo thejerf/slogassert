@@ -180,9 +180,9 @@ func (lmm LogMessageMatch) matches(lm LogMessage) bool {
 }
 
 // Unasserted returns all the log messages that are currently
-// unasserted within the slog assert. This method does NOT assert
-// them; after this method call all messages will all still fail on
-// an AssertEmpty call.
+// unasserted within the slog assert. The returned result is a deep
+// copy. This method does NOT assert them; after this method call all
+// messages will all still fail on an AssertEmpty call.
 //
 // It is probably superficially tempting to just use this and examine
 // the result with code. However, bear in mind that using the
@@ -193,7 +193,11 @@ func (lmm LogMessageMatch) matches(lm LogMessage) bool {
 //
 // However, sometimes you just need to check the messages with code.
 func (h *Handler) Unasserted() []LogMessage {
-	return append([]LogMessage{}, h.logMessages...)
+	msgs := []LogMessage{}
+	for _, msg := range h.logMessages {
+		msgs = append(msgs, msg.clone())
+	}
+	return msgs
 }
 
 // Reset will simply empty out the log entirely. This can be used in

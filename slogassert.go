@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"runtime/debug"
 	"sort"
 	"strings"
@@ -227,6 +228,16 @@ func (lm *LogMessage) Print(w io.Writer) {
 	msg.WriteString(lm.Stacktrace)
 	msg.WriteString("\n")
 	_, _ = w.Write([]byte(msg.String()))
+}
+
+func (lm *LogMessage) clone() LogMessage {
+	return LogMessage{
+		Message:    lm.Message,
+		Level:      lm.Level,
+		Stacktrace: lm.Stacktrace,
+		Time:       lm.Time,
+		Attrs:      maps.Clone(lm.Attrs),
+	}
 }
 
 type groupedAttrs struct {
