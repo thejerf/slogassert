@@ -68,6 +68,10 @@ one is signed.)
 
 ## Version History
 
+* v0.0.9:
+  * Fix a locking issue in `Unasserted`, which should make this all
+    completely thread-safe.
+  * I consider this a v1.0.0. release candidate.
 * v0.0.8:
   * Make Unasserted return a fully independent copy of the LogMessage
     so the user can't accidentally corrupt it.

@@ -110,7 +110,9 @@ func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) {
 
 // LogMessageMatch defines a precise message to match.
 //
-// The Message works as you'd expect; an equality check.
+// The Message works as you'd expect; an equality check. It is always
+// checked, so an empty message means to verify that the message
+// logged was empty.
 //
 // If Level is LevelDontCare, the level won't be matched. Otherwise,
 // it will also be an equality check.
@@ -194,7 +196,11 @@ func (lmm LogMessageMatch) matches(lm LogMessage) bool {
 // However, sometimes you just need to check the messages with code.
 func (h *Handler) Unasserted() []LogMessage {
 	msgs := []LogMessage{}
-	for _, msg := range h.logMessages {
+	root := h.root()
+	root.m.Lock()
+	defer root.m.Unlock()
+
+	for _, msg := range root.logMessages {
 		msgs = append(msgs, msg.clone())
 	}
 	return msgs

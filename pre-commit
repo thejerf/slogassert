@@ -6,9 +6,8 @@
 set -v
 set -e
 
-go1.21.0 test
-# need to wait until I can update my core system to 1.21 for this.
-# golangci-lint run
+go test
+golangci-lint run
 
 echo Build succeeds.
 exit 0

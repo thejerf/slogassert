@@ -43,6 +43,8 @@ import (
 
 // Handler implements the slog.Handler interface, with additional
 // methods for testing.
+//
+// All methods on this Handler are thread-safe.
 type Handler struct {
 	// only the top-level logger should be doing the recording,
 	// all children loggers need to defer farther down
