@@ -135,19 +135,20 @@ func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) {
 // It can be a function "func (T) bool", where "T" matches the
 // concrete value behind the Kind of the slog.Value. In that case, the
 // same rules apply. For KindAny, this must be precisely "func(any)
-// bool"; no further wrapping will be done.
+// bool"; this is done via type switching, not a lot of `reflect`
+// calls, so only and exactly "func (any) bool" will work.
 //
 // It can be a concrete value, in which case it must be equal to the
 // value contained in the attribute. Type-appropriate equality is
 // used, e.g., time.Time's are compared via time.Equal.
 //
+// Any other value will result in an error being returned when used to
+// match.
+//
 // AllAttrsMatch indicate whether the Attrs map must contain matches
 // for all attributes in the match. If true, and there are unmatched
 // attribtues in the log message, the match will fail. If false, extra
 // attributes in the log message won't fail the match.
-//
-// Note: This strikes me as likely to change to at least some degree
-// going forward.
 type LogMessageMatch struct {
 	Message       string
 	Level         slog.Level
@@ -183,8 +184,8 @@ func (lmm LogMessageMatch) matches(lm LogMessage) bool {
 
 // Unasserted returns all the log messages that are currently
 // unasserted within the slog assert. The returned result is a deep
-// copy. This method does NOT assert them; after this method call all
-// messages will all still fail on an AssertEmpty call.
+// copy. This method does NOT assert them; after a call to this
+// method, if there are any messages an AssertEmpty will still fail.
 //
 // It is probably superficially tempting to just use this and examine
 // the result with code. However, bear in mind that using the
