@@ -14,12 +14,22 @@ commonly ignored by people writing tests, log messages are often
 important things to test for, for several reasons:
 
  * Because they are not tested for, it is suprisingly easy for them to
-   break without people realizing.
+   break without anyone realizing.
  * Log messages can have security impact. Any log messages that may be
-   used to reconstruct a security incident should be tested.
- * Log messages often implicitly test that some other code paths were
-   covered, or provide a mechanism for asserting coverage of code
-   paths that would otherwise be unasserted.
+   used to reconstruct a security incident should be tested to ensure
+   they contain the data they are supposed to contain.
+ * Even when you don't otherwise deeply care about log
+   messages, log messages can often still double as a way of asserting
+   that certain code was actually reached, and the value of variables
+   at the time it was reached is as expected.
+   
+While I wouldn't pull in slogassert just for that third point, if the
+first two are in play for your code base, slog's strong focus on
+structured attributes means that log messages can also double as
+testing probe points within your code that may be otherwise
+unreachable. I don't use this a lot but when you need it it's very
+useful. (You may find it helpful to create a testing log level even
+above Debug for this.)
 
 This implements a handler for slog that more-or-less records the
 incoming messages, then provides a mechanism for testing for the
@@ -39,15 +49,13 @@ diagnosing where any unasserted log messages are coming from.
 
 See [usage in the godoc](https://pkg.go.dev/github.com/thejerf/slogassert).
 
+This also includes a null logger, which I am surprised is not in the
+library itself as I write this since a `nil` slog.Logger is invalid.
+
 ## Release Status
 
-`slogassert` is **super alpha**. I reserve the right to
-change _everything_ as I continue to work out how to correctly write
-slog handlers.
-
-As you read this, I'm basically committing stuff with enough version
-information that I can pull it into some repos I'll be working with
-to test this out.
+`slogassert` is **beta**. I consider the package as it nows stands to
+be a 1.0 release candidate, but it is not yet officially 1.0.
 
 The code is covered as much as possible, however it is not possible to
 directly test covering the code that calls fatal errors, so that code
