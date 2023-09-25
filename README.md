@@ -76,6 +76,8 @@ one is signed.)
 
 ## Version History
 
+* v0.1.1:
+  * No code changes, just screwed up tagging.
 * v0.1.0:
   * Fixed a major error: Somehow I completely overlooked adding the
     params on a sublogger added with `.With` to the resulting log
