@@ -162,6 +162,8 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 
 	root := h.root()
 	root.m.Lock()
+	h.attrs.runOn(f)
+
 	root.logMessages = append(root.logMessages, lm)
 	root.m.Unlock()
 
@@ -275,6 +277,28 @@ func (ga *groupedAttrs) clone() *groupedAttrs {
 		new.groups[group] = child.clone()
 	}
 	return new
+}
+
+// should be run only under handler lock
+func (ga *groupedAttrs) runOn(f func([]string, slog.Attr) bool) {
+	ga.runOnRecursive(nil, f)
+}
+
+func (ga *groupedAttrs) runOnRecursive(
+	currGroup []string,
+	f func([]string, slog.Attr) bool,
+) {
+	for _, attr := range ga.attrs {
+		res := f(currGroup, attr)
+		if !res {
+			return
+		}
+	}
+
+	for group, subGa := range ga.groups {
+		newGroup := append(currGroup, group)
+		subGa.runOnRecursive(newGroup, f)
+	}
 }
 
 func dotEncode(s string) string {

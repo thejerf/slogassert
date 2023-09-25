@@ -233,6 +233,22 @@ func TestWrapping(t *testing.T) {
 	}
 }
 
+func TestWith(t *testing.T) {
+	handler := New(t, slog.LevelWarn, nil)
+	log := slog.New(handler)
+	subLog := log.With("test_attr", "value").WithGroup("group").With("test2", "value2")
+	subLog.Error(testWarning)
+	handler.AssertPrecise(LogMessageMatch{
+		Message: testWarning,
+		Level:   slog.LevelError,
+		Attrs: map[string]any{
+			"test_attr":   "value",
+			"group.test2": "value2",
+		},
+		AllAttrsMatch: true,
+	})
+}
+
 type testLogValuer struct{}
 
 func (t testLogValuer) LogValue() slog.Value {

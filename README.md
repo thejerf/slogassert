@@ -76,6 +76,14 @@ one is signed.)
 
 ## Version History
 
+* v0.1.0:
+  * Fixed a major error: Somehow I completely overlooked adding the
+    params on a sublogger added with `.With` to the resulting log
+    messages. I guess I thought slog would do that for me. And this is
+    why v0.0.9 was only a "release candidate".
+    
+    That said, I am advancing this up the semver chain to a release
+    candidate. 
 * v0.0.9:
   * Fix a locking issue in `Unasserted`, which should make this all
     completely thread-safe.
