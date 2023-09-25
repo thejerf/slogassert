@@ -334,6 +334,11 @@ func matchAttr(matcher any, val slog.Value) error {
 				return nil
 			}
 			return errNoMatch
+		case int:
+			if float64(match) == val.Float64() {
+				return nil
+			}
+			return errNoMatch
 		default:
 			return fmt.Errorf("invalid type for comparing KindFloat64: %T", matcher)
 		}
@@ -352,6 +357,11 @@ func matchAttr(matcher any, val slog.Value) error {
 			return errNoMatch
 		case int64:
 			if match == val.Int64() {
+				return nil
+			}
+			return errNoMatch
+		case int:
+			if int64(match) == val.Int64() {
 				return nil
 			}
 			return errNoMatch
@@ -415,6 +425,11 @@ func matchAttr(matcher any, val slog.Value) error {
 			return errNoMatch
 		case uint64:
 			if match == val.Uint64() {
+				return nil
+			}
+			return errNoMatch
+		case int:
+			if uint64(match) == val.Uint64() {
 				return nil
 			}
 			return errNoMatch

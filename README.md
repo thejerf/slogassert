@@ -76,6 +76,13 @@ one is signed.)
 
 ## Version History
 
+* v0.1.2:
+  * Allow use of ints to compare against Int64, Float64, and Uint64.
+  
+    This resolves an issue where you write an AssertPrecise and use a
+    bare int in the source code, which the Go compiler decides is an
+    `int`, and then that didn't match any of the numeric types. This
+    adds the relevant clauses to the matchers.
 * v0.1.1:
   * No code changes, just screwed up tagging.
 * v0.1.0:

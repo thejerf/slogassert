@@ -132,6 +132,26 @@ func TestAssertPrecise(t *testing.T) {
 		},
 	})
 
+	// slog upgrades ints to int64s, and then when we pass a base
+	// "1" in the source code to test for them the type doesn't
+	// match. This is quite annoying. Test that we fixed that,
+	// which is to say, in the Attrs map, we don't need to cast to
+	// int64:
+	log.Warn(testWarning,
+		"int", 1,
+		"float", float64(2),
+		"uint", uint64(3),
+	)
+	handler.AssertPrecise(LogMessageMatch{
+		Message: testWarning,
+		Level:   slog.LevelWarn,
+		Attrs: map[string]any{
+			"int":   1,
+			"float": 2,
+			"uint":  3,
+		},
+	})
+
 	// does not crash because the message is consumed
 }
 
