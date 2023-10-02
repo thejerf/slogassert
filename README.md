@@ -76,6 +76,15 @@ one is signed.)
 
 ## Version History
 
+* v0.1.4 (not yet tagged):
+  * I was doing a lot of work on my work laptop and had my work email
+    rather than my personal email, but my signing key is my personal
+    email. This commit signs the top of the repository correctly.
+    
+    As I mention in the version numbering section, that's what
+    matters; a signed commit at the top of a repository is essentially
+    signing the whole thing, not just that commit. So it is not
+    necessary to rewrite the whole repo to fix all the previous commits.
 * v0.1.3:
   * Add a return value to the \*Some\* methods that return how many
     messages they consumed as being asserted.
