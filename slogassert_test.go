@@ -35,7 +35,9 @@ func TestVeryBasicFunctionality(t *testing.T) {
 		slog.Duration("duration", time.Second),
 	)
 
-	handler.AssertSomeMessage(testWarning)
+	if handler.AssertSomeMessage(testWarning) != 1 {
+		t.Fatal("incorrect number return from AssertSomeMessage")
+	}
 }
 
 func TestSlogHandler(t *testing.T) {
@@ -95,7 +97,9 @@ func TestAssertSomeMessage(t *testing.T) {
 	log.Warn(testWarning)
 	log.Warn(testWarning)
 
-	handler.AssertSomeMessage(testWarning)
+	if handler.AssertSomeMessage(testWarning) != 3 {
+		t.Fatal("incorrect number returned by AssertSomeMessage")
+	}
 	// does not crash because they are all consumed
 }
 
@@ -115,7 +119,9 @@ func TestAssertSomeMessageLevel(t *testing.T) {
 	log.Warn(testWarning)
 	log.Warn(testWarning)
 
-	handler.AssertSomeMessageLevel(testWarning, slog.LevelWarn)
+	if handler.AssertSomeMessageLevel(testWarning, slog.LevelWarn) != 3 {
+		t.Fatal("incorrect return from AssertSomeMessageLevel")
+	}
 	// does not crash because the messages are consumed
 }
 
@@ -186,13 +192,15 @@ func TestAssertSomePrecise(t *testing.T) {
 	log.Warn(testWarning, "key", "val")
 	log.Warn(testWarning, "key", "val")
 
-	handler.AssertSomePrecise(LogMessageMatch{
+	if handler.AssertSomePrecise(LogMessageMatch{
 		Message: testWarning,
 		Level:   slog.LevelWarn,
 		Attrs: map[string]any{
 			"key": "val",
 		},
-	})
+	}) != 3 {
+		t.Fatal("incorrect number returned from AssertSomePrecise")
+	}
 
 	// does not crash because the message is consumed
 }

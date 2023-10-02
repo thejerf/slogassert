@@ -76,6 +76,9 @@ one is signed.)
 
 ## Version History
 
+* v0.1.3:
+  * Add a return value to the \*Some\* methods that return how many
+    messages they consumed as being asserted.
 * v0.1.2:
   * Allow use of ints to compare against Int64, Float64, and Uint64.
   

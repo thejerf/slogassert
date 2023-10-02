@@ -39,14 +39,16 @@ func (h *Handler) AssertEmpty() {
 }
 
 // AssertSomeMessage asserts that some logging events were recorded
-// with the given message.
-func (h *Handler) AssertSomeMessage(msg string) {
+// with the given message. The return value is the number of matched
+// messages if there were any. (If there aren't any this fails the test.)
+func (h *Handler) AssertSomeMessage(msg string) int {
 	matches := h.filter(func(lm LogMessage) (bool, bool) {
 		return lm.Message == msg, true
 	})
 	if matches == 0 {
 		h.t.Fatalf("No logs with message %q found", msg)
 	}
+	return matches
 }
 
 // AssertMessage asserts a logging message recorded with the giving
@@ -63,14 +65,16 @@ func (h *Handler) AssertMessage(msg string) {
 
 // AssertSomeMessageLevel is a weak assertion that asserts that some
 // logging events were recorded with the given message, at the given
-// logging level.
-func (h *Handler) AssertSomeMessageLevel(msg string, level slog.Level) {
+// logging level. The return value is the number of matched messages
+// if there were any. (If there aren't any this fails the test.)
+func (h *Handler) AssertSomeMessageLevel(msg string, level slog.Level) int {
 	matches := h.filter(func(lm LogMessage) (bool, bool) {
 		return lm.Message == msg && lm.Level == level, true
 	})
 	if matches == 0 {
 		h.t.Fatalf("No logs with message %q and level %s found", msg, level)
 	}
+	return matches
 }
 
 // AssertMessageLevel asserts a logging message with the given message
@@ -98,14 +102,17 @@ func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
 }
 
 // AssertSomePrecise asserts all the messages in the log that match
-// the LogMessageMatch criteria.
-func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) {
+// the LogMessageMatch criteria. The return value is th enumber of
+// matched messages if there were any. (If there aren't any this fails
+// the test.)
+func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) int {
 	matches := h.filter(func(lm LogMessage) (bool, bool) {
 		return lmm.matches(lm), true
 	})
 	if matches == 0 {
 		h.t.Fatal("No logs matching filter were found")
 	}
+	return matches
 }
 
 // LogMessageMatch defines a precise message to match.
