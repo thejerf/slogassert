@@ -76,7 +76,28 @@ one is signed.)
 
 ## Version History
 
-* v0.1.4 (not yet tagged):
+* v0.2.0 **BREAKING CHANGE**, and worse, **ONE THAT WILL NOT BE
+  NOTICED WITHOUT READING THE README**:
+  * If test code panics, and a `*testing.T.Cleanup` function itself
+    has some sort of `.Fatal` call, the result is that the panic is
+    eaten. Due to [Golang issue
+    #49929](https://github.com/golang/go/issues/49929), there is no
+    way to detect this in the cleanup function because the cleanup
+    function is run in the wrong place to detect the panic and the
+    `t.Failed()` method will return false.
+    
+    Practice has revealed that this is _way_ too confusing, so I'm
+    removing the automatic cleanup function. Therefore, **any
+    slogassert.New calls need to have a `defer handler.AssertEmpty()`
+    manually added to retain the original behavior**. The
+    `AssertEmpty` function has code added to see whether it is in the
+    middle of a panic, and if so, it will not fatally error. (This is
+    in practice good anyhow because panics frequently result in the
+    log messages being logged but the assertions not running, so it
+    frequently produced spurious and confusing messages anyhow.)
+    
+    This still mangles the panic a bit, unfortunately, but the
+    necessary data is still there.
   * I was doing a lot of work on my work laptop and had my work email
     rather than my personal email, but my signing key is my personal
     email. This commit signs the top of the repository correctly.

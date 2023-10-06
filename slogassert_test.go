@@ -18,6 +18,7 @@ const (
 
 func TestVeryBasicFunctionality(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 
 	sublog := log.WithGroup("test").With(
@@ -42,6 +43,7 @@ func TestVeryBasicFunctionality(t *testing.T) {
 
 func TestSlogHandler(t *testing.T) {
 	handler := New(t, slog.LevelDebug, nil)
+	defer handler.AssertEmpty()
 	err := slogtest.TestHandler(handler, func() []map[string]any {
 		results := []map[string]any{}
 
@@ -65,16 +67,9 @@ func TestSlogHandler(t *testing.T) {
 	}
 }
 
-func TestWithoutCleanup(t *testing.T) {
-	handler := NewWithoutCleanup(t, slog.LevelWarn, nil)
-	log := slog.New(handler)
-	log.Warn(testWarning)
-	// this test doesn't fail at the end, because we didn't
-	// register a cleanup function
-}
-
 func TestAssertSomeMessage(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 	log.Warn(testWarning)
 
@@ -105,6 +100,7 @@ func TestAssertSomeMessage(t *testing.T) {
 
 func TestAssertMessage(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 	log.Warn(testWarning)
 
@@ -114,6 +110,7 @@ func TestAssertMessage(t *testing.T) {
 
 func TestAssertSomeMessageLevel(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 	log.Warn(testWarning)
 	log.Warn(testWarning)
@@ -127,6 +124,7 @@ func TestAssertSomeMessageLevel(t *testing.T) {
 
 func TestAssertPrecise(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 	log.Warn(testWarning, "key", "val")
 
@@ -163,6 +161,7 @@ func TestAssertPrecise(t *testing.T) {
 
 func TestReset(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 	log.Warn(testWarning, "key", "val")
 
@@ -172,6 +171,7 @@ func TestReset(t *testing.T) {
 
 func TestFiltering(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 
 	log.Warn(testWarning)
@@ -187,6 +187,7 @@ func TestFiltering(t *testing.T) {
 
 func TestAssertSomePrecise(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 	log.Warn(testWarning, "key", "val")
 	log.Warn(testWarning, "key", "val")
@@ -207,6 +208,7 @@ func TestAssertSomePrecise(t *testing.T) {
 
 func TestAssertMessageLevel(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 	log.Warn(testWarning)
 
@@ -216,6 +218,7 @@ func TestAssertMessageLevel(t *testing.T) {
 
 func TestLogValuer(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 	log.Warn(testWarning,
 		"valuer", testLogValuer{},
@@ -239,6 +242,7 @@ func TestWrapping(t *testing.T) {
 	buf := &strings.Builder{}
 	wrappedHandler := slog.NewTextHandler(buf, nil)
 	handler := New(t, slog.LevelWarn, wrappedHandler)
+	defer handler.AssertEmpty()
 	logger := slog.New(handler)
 
 	logger.WithGroup("test").Warn(testWarning,
@@ -263,6 +267,7 @@ func TestWrapping(t *testing.T) {
 
 func TestWith(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
+	defer handler.AssertEmpty()
 	log := slog.New(handler)
 	subLog := log.With("test_attr", "value").WithGroup("group").With("test2", "value2")
 	subLog.Error(testWarning)
@@ -289,8 +294,6 @@ func (t testLogValuer) LogValue() slog.Value {
 // various little assertions to cover the code
 func TestCoverage(t *testing.T) {
 	panics(t, "New with nil", func() { New(nil, slog.LevelWarn, nil) })
-	panics(t, "NewWithoutCleanup",
-		func() { NewWithoutCleanup(nil, slog.LevelWarn, nil) })
 }
 
 func panics(t *testing.T, name string, f func()) {

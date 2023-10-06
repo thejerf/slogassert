@@ -65,34 +65,12 @@ type Handler struct {
 
 // New creates a new testing logger, logging with the given level.
 //
-// This will automatically call a t.Cleanup to assert that the logger
-// is empty. If you want to do this manually or not at all, call
-// NewWithoutCleanup.
-//
 // If wrapped is not nil, Handle calls will be passed down to that
 // handler as well.
+//
+// It is recommended to generally call defer handler.AssertEmpty() on
+// the result of this call.
 func New(t *testing.T, leveler slog.Leveler, wrapped slog.Handler) *Handler {
-	if t == nil {
-		panic("t must not be nil for a slogtest.Handler")
-	}
-	handler := &Handler{
-		leveler: leveler,
-		attrs:   &groupedAttrs{groups: map[string]*groupedAttrs{}},
-		t:       t,
-		wrapped: wrapped,
-	}
-	t.Cleanup(handler.AssertEmpty)
-	return handler
-}
-
-// NewWithoutCleanup creates a new testing logger, logging with the given level.
-//
-// This does not automatically register a cleanup function to assert
-// that the logger is empty.
-//
-// If wrapped is not nil, Handle calls will be passed down to that
-// handler as well.
-func NewWithoutCleanup(t *testing.T, leveler slog.Leveler, wrapped slog.Handler) *Handler {
 	if t == nil {
 		panic("t must not be nil for a slogtest.Handler")
 	}

@@ -29,13 +29,29 @@ func (h *Handler) AssertEmpty() {
 		return
 	}
 
-	// uncoverable past this point due to Fatalf
-	for _, lm := range h.logMessages {
-		lm.Print(os.Stderr)
-	}
+	// If this is used in a test as defer handler.AssertEmpty(),
+	// this validates that we're not currently in a panic
+	// recovery. If we are, we let the panic through rather than
+	// calling h.t.Fatalf, due to:
+	//
+	// https://github.com/golang/go/issues/49929
+	//
+	// If that is ever fixed we can resume the original API that
+	// uses t.Cleanup to automatically clean up, but otherwise
+	// eating panics has proved to be too confusing and it's
+	// better to just ask people to defer handler.Cleanup if they
+	// want that behavior.
+	r := recover()
+	if r == nil {
+		for _, lm := range h.logMessages {
+			lm.Print(os.Stderr)
+		}
 
-	h.t.Fatalf("%d unasserted log message(s); see printout above",
-		len(h.logMessages))
+		h.t.Fatalf("%d unasserted log message(s); see printout above",
+			len(h.logMessages))
+	} else {
+		panic(r)
+	}
 }
 
 // AssertSomeMessage asserts that some logging events were recorded
