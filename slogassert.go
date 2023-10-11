@@ -88,6 +88,11 @@ func New(t *testing.T, leveler slog.Leveler, wrapped slog.Handler) *Handler {
 func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	handler := h.child()
 	handler.attrs.set(h.currentGroup, attrs...)
+
+	if h.wrapped != nil {
+		handler.wrapped = h.wrapped.WithAttrs(attrs)
+	}
+
 	return handler
 }
 
@@ -95,7 +100,13 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 // everything into the given group.
 func (h *Handler) WithGroup(name string) slog.Handler {
 	handler := h.child()
-	handler.currentGroup = append(append([]string{}, h.currentGroup...), name)
+	handler.currentGroup = append(append([]string{},
+		h.currentGroup...), name)
+
+	if h.wrapped != nil {
+		handler.wrapped = h.wrapped.WithGroup(name)
+	}
+
 	return handler
 }
 

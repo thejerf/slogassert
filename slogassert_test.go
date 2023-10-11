@@ -260,7 +260,7 @@ func TestWrapping(t *testing.T) {
 	logged := buf.String()
 	// hack off the timestamp because it is always different
 	_, remainder, _ := strings.Cut(logged, " ")
-	if strings.TrimSpace(remainder) != `level=WARN msg="test warning" a=b` {
+	if strings.TrimSpace(remainder) != `level=WARN msg="test warning" test.a=b` {
 		t.Fatal("did not get expected log result")
 	}
 }
