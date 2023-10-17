@@ -76,8 +76,24 @@ one is signed.)
 
 ## Version History
 
-* v0.2.0 **BREAKING CHANGE**, and worse, **ONE THAT WILL NOT BE
-  NOTICED WITHOUT READING THE README**:
+* v0.3.0 more **BREAKING CHANGES**:
+  * Significant API rewrite. This:
+    * Exposes Assert directly, for functional-matching based
+      assertions, which enables a lot of more complicated scenarios.
+    * Now that the general power is available to end users, the
+      package doesn't need to offer every marginal match method, so
+      I'm removing the built-in message + level assertion. It's easy
+      now to implement yourself if it's useful, and I haven't used it
+      yet in my own code so I question its general utility, sandwiched
+      between the very useful "please assert this message" (useful
+      because it is agnostic about levels) and "please assert this
+      exact match" methods.
+    * If you wrap another slog Handler with this, we need to properly
+      pass WithGroup and WithAttrs down to that wrapped handler too.
+    
+      I like slog overall but I will say writing a correct Handler
+      wrapper is distinctly nontrivial.
+* v0.2.0 **BREAKING CHANGE**:
   * If test code panics, and a `*testing.T.Cleanup` function itself
     has some sort of `.Fatal` call, the result is that the panic is
     eaten. Due to [Golang issue

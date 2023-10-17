@@ -108,20 +108,6 @@ func TestAssertMessage(t *testing.T) {
 	// does not crash because the message is consumed
 }
 
-func TestAssertSomeMessageLevel(t *testing.T) {
-	handler := New(t, slog.LevelWarn, nil)
-	defer handler.AssertEmpty()
-	log := slog.New(handler)
-	log.Warn(testWarning)
-	log.Warn(testWarning)
-	log.Warn(testWarning)
-
-	if handler.AssertSomeMessageLevel(testWarning, slog.LevelWarn) != 3 {
-		t.Fatal("incorrect return from AssertSomeMessageLevel")
-	}
-	// does not crash because the messages are consumed
-}
-
 func TestAssertPrecise(t *testing.T) {
 	handler := New(t, slog.LevelWarn, nil)
 	defer handler.AssertEmpty()
@@ -203,16 +189,6 @@ func TestAssertSomePrecise(t *testing.T) {
 		t.Fatal("incorrect number returned from AssertSomePrecise")
 	}
 
-	// does not crash because the message is consumed
-}
-
-func TestAssertMessageLevel(t *testing.T) {
-	handler := New(t, slog.LevelWarn, nil)
-	defer handler.AssertEmpty()
-	log := slog.New(handler)
-	log.Warn(testWarning)
-
-	handler.AssertMessageLevel(testWarning, slog.LevelWarn)
 	// does not crash because the message is consumed
 }
 
