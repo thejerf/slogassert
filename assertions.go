@@ -39,6 +39,7 @@ func trueOnlyOnce(f func(LogMessage) bool) func(LogMessage) bool {
 // The passed-in function will be presented only with the remaining
 // unasserted log messages at the time of the call.
 func (h *Handler) Assert(f func(LogMessage) bool) int {
+	h.t.Helper()
 	root := h.root()
 	root.m.Lock()
 	defer root.m.Unlock()
@@ -63,6 +64,7 @@ func (h *Handler) Assert(f func(LogMessage) bool) int {
 // given msg and args to t.Fatalf. This can be used in your custom
 // assertions to fail them out.
 func (h *Handler) Fail(msg string, args ...any) {
+	h.t.Helper()
 	// If this is used in a test as defer handler.AssertEmpty(),
 	// this validates that we're not currently in a panic
 	// recovery. If we are, we let the panic through rather than
@@ -93,6 +95,7 @@ func (h *Handler) Fail(msg string, args ...any) {
 // A call to this method will be automatically deferred through the
 // testing system if you use New(), but you can also use New
 func (h *Handler) AssertEmpty() {
+	h.t.Helper()
 	h = h.root()
 	h.m.Lock()
 	defer h.m.Unlock()
@@ -109,6 +112,7 @@ func (h *Handler) AssertEmpty() {
 // with the given message. The return value is the number of matched
 // messages if there were any. If there was zero, the test fails.
 func (h *Handler) AssertSomeMessage(msg string) int {
+	h.t.Helper()
 	matches := h.Assert(func(lm LogMessage) bool {
 		return lm.Message == msg
 	})
@@ -121,6 +125,7 @@ func (h *Handler) AssertSomeMessage(msg string) int {
 // AssertMessage asserts a logging message recorded with the giving
 // logging message.
 func (h *Handler) AssertMessage(msg string) {
+	h.t.Helper()
 	matches := h.Assert(trueOnlyOnce(func(lm LogMessage) bool {
 		return lm.Message == msg
 	}))
@@ -132,6 +137,7 @@ func (h *Handler) AssertMessage(msg string) {
 // AssertPrecise takes a LogMessageMatch and asserts the first log
 // message that matches it.
 func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
+	h.t.Helper()
 	matches := h.Assert(trueOnlyOnce(func(lm LogMessage) bool {
 		return lmm.matches(lm)
 	}))
@@ -145,6 +151,7 @@ func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
 // matched messages if there were any. (If there aren't any this fails
 // the test.)
 func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) int {
+	h.t.Helper()
 	matches := h.Assert(func(lm LogMessage) bool {
 		return lmm.matches(lm)
 	})
@@ -242,6 +249,7 @@ func (lmm LogMessageMatch) matches(lm LogMessage) bool {
 //
 // However, sometimes you just need to check the messages with code.
 func (h *Handler) Unasserted() []LogMessage {
+	h.t.Helper()
 	msgs := []LogMessage{}
 	root := h.root()
 	root.m.Lock()

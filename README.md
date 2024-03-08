@@ -76,6 +76,9 @@ one is signed.)
 
 ## Version History
 
+* v0.3.1:
+  * Annotate the internal .Assert\* functions as `t.Helper()`s to
+    improve error messages when an assert fails.
 * v0.3.0 more **BREAKING CHANGES**:
   * Significant API rewrite. This:
     * Exposes Assert directly, for functional-matching based
