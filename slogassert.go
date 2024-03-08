@@ -17,9 +17,9 @@ Normal usage looks like this:
 	     // Now start asserting things:
 	     handler.AssertSomeOf("some log message")
 
-	     // automatically at the end of your function, an
-	     // assertion will run that all log messages are accounted
-	     // for.
+	     // often useful to finish up with an assertion that
+	     // all log messages have been accounted for:
+	     handler.AssertEmpty()
 	}
 
 A variety of assertions at varying levels of detail are available on
