@@ -276,6 +276,15 @@ func (h *Handler) Reset() {
 var errNoMatch = errors.New("does not match")
 
 func matchAttr(matcher any, val slog.Value) error {
+	matchLogValuer, isLogValuer := matcher.(slog.LogValuer)
+	if isLogValuer {
+		matchVal := matchLogValuer.LogValue()
+		if !matchVal.Equal(val) {
+			return errNoMatch
+		}
+		return nil
+	}
+
 	switch val.Kind() {
 	case slog.KindAny:
 		switch match := matcher.(type) {

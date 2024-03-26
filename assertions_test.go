@@ -3,6 +3,7 @@ package slogassert
 import (
 	"fmt"
 	"log/slog"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -208,4 +209,20 @@ func TestMatchers(t *testing.T) {
 			}
 		}
 	}
+
+	if matchAttr(ValueAsString(2), slog.StringValue("2")) != nil {
+		t.Fatal("can't handle LogValue matchers")
+	}
+	if matchAttr(ValueAsString(2), slog.StringValue("3")) == nil {
+		t.Fatal("can't handle LogValue matchers")
+	}
+}
+
+// A ValueAsString is an int that is also a LogValuer that returns
+// itself as a string for slog. This is used for testing that the
+// matching value is correct.
+type ValueAsString int
+
+func (vas ValueAsString) LogValue() slog.Value {
+	return slog.StringValue(strconv.Itoa(int(vas)))
 }

@@ -76,6 +76,14 @@ one is signed.)
 
 ## Version History
 
+* v0.3.2:
+  * A LogValuer being used for an attribute match would fail to match
+    because slogassert wouldn't resolve the value, but try to match
+    the value against the slog.Value. If the LogValuer did something
+    like change types or something, it would never match. Now values
+    that implement LogValuer can be used directly in attribute
+    matches. See the `ValueAsString` in `assertions_test.go` if you
+    don't know what I mean.
 * v0.3.1:
   * Annotate the internal .Assert\* functions as `t.Helper()`s to
     improve error messages when an assert fails.
