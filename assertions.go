@@ -209,7 +209,9 @@ type LogMessageMatch struct {
 	AllAttrsMatch bool
 }
 
-func (lmm LogMessageMatch) matches(lm LogMessage) bool {
+// Matches returnes true if the provided LogMessage satisfies
+// LogMessageMatch.
+func (lmm LogMessageMatch) Matches(lm LogMessage) bool {
 	if lmm.Message != lm.Message {
 		return false
 	}
