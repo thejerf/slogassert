@@ -139,7 +139,7 @@ func (h *Handler) AssertMessage(msg string) {
 func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
 	h.t.Helper()
 	matches := h.Assert(trueOnlyOnce(func(lm LogMessage) bool {
-		return lmm.matches(lm)
+		return lmm.Matches(lm)
 	}))
 	if matches == 0 {
 		h.Fail("No logs matching filter were found")
@@ -153,7 +153,7 @@ func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
 func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) int {
 	h.t.Helper()
 	matches := h.Assert(func(lm LogMessage) bool {
-		return lmm.matches(lm)
+		return lmm.Matches(lm)
 	})
 	if matches == 0 {
 		h.Fail("No logs matching filter %#v were found", lmm)
