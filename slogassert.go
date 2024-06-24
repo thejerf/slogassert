@@ -60,7 +60,7 @@ type Handler struct {
 	m           sync.Mutex
 	logMessages []LogMessage
 
-	t *testing.T
+	t testing.TB
 }
 
 // New creates a new testing logger, logging with the given level.
@@ -70,7 +70,7 @@ type Handler struct {
 //
 // It is recommended to generally call defer handler.AssertEmpty() on
 // the result of this call.
-func New(t *testing.T, leveler slog.Leveler, wrapped slog.Handler) *Handler {
+func New(t testing.TB, leveler slog.Leveler, wrapped slog.Handler) *Handler {
 	if t == nil {
 		panic("t must not be nil for a slogtest.Handler")
 	}
