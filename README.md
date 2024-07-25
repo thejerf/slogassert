@@ -76,6 +76,9 @@ one is signed.)
 
 ## Version History
 
+* v0.3.4:
+  * Create a custom interface for just the components of testing.TB
+  * slogassert actually uses.
 * v0.3.3:
   * Export LogMessageMatch.Matches for external use.
   * Add utility function for testing.

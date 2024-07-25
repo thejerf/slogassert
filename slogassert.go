@@ -37,7 +37,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"testing"
 	"time"
 )
 
@@ -60,7 +59,19 @@ type Handler struct {
 	m           sync.Mutex
 	logMessages []LogMessage
 
-	t testing.TB
+	t Tester
+}
+
+// The Tester interface defines the incoming testing interface.
+//
+// The standard library *testing.T and *testing.B values conform to this
+// already.
+//
+// If your testing library doesn't have an equivalent of Helper, it is fine
+// to implement it as a no-op.
+type Tester interface {
+	Helper()
+	Fatalf(string, ...any)
 }
 
 // New creates a new testing logger, logging with the given level.
@@ -70,7 +81,7 @@ type Handler struct {
 //
 // It is recommended to generally call defer handler.AssertEmpty() on
 // the result of this call.
-func New(t testing.TB, leveler slog.Leveler, wrapped slog.Handler) *Handler {
+func New(t Tester, leveler slog.Leveler, wrapped slog.Handler) *Handler {
 	if t == nil {
 		panic("t must not be nil for a slogtest.Handler")
 	}
