@@ -76,6 +76,10 @@ one is signed.)
 
 ## Version History
 
+* v0.3.3:
+  * Export LogMessageMatch.Matches for external use.
+  * Add utility function for testing.
+  * Take the `testing.TB` interface rather than a constant `*testing.T`.
 * v0.3.2:
   * A LogValuer being used for an attribute match would fail to match
     because slogassert wouldn't resolve the value, but try to match
