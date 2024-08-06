@@ -1,6 +1,7 @@
 package slogassert
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -225,4 +226,49 @@ type ValueAsString int
 
 func (vas ValueAsString) LogValue() slog.Value {
 	return slog.StringValue(strconv.Itoa(int(vas)))
+}
+
+// TestWaiting tests that waiting for a LogMessage works. It only tests
+// AssertOrWait as all other AssertXOrWaits are based on this.
+func TestWaiting(t *testing.T) {
+	handler := New(t, slog.LevelError, nil)
+
+	syncC := make(chan struct{})
+	handler.syncC = syncC
+
+	slogger := slog.New(handler)
+
+	f := func(LogMessage) bool { return true }
+
+	slogger.Error("Test message")
+	ret := handler.AssertOrWait(context.Background(), f)
+	if ret != 1 {
+		t.Fatalf("Synchronous return value is not 1: %d", ret)
+	}
+
+	ctx, cancelF := context.WithCancel(context.Background())
+
+	go func() {
+		<-syncC
+		cancelF()
+		<-syncC
+		slogger.Error("Test message")
+		<-syncC
+		slogger.Error("Test message")
+	}()
+
+	ret = handler.AssertOrWait(ctx, f)
+	if ret != 0 {
+		t.Fatalf("Asynchronous cancelled return value is not 0: %d", ret)
+	}
+
+	ret = handler.AssertOrWait(context.Background(), f)
+	if ret != 1 {
+		t.Fatalf("First asynchronous return value is not 1: %d", ret)
+	}
+
+	ret = handler.AssertOrWait(context.Background(), f)
+	if ret != 1 {
+		t.Fatalf("Second asynchronous return value is not 1: %d", ret)
+	}
 }

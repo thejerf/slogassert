@@ -40,6 +40,12 @@ import (
 	"time"
 )
 
+type waiter struct {
+	ctx context.Context
+	f   func(LogMessage) bool
+	c   chan<- struct{}
+}
+
 // Handler implements the slog.Handler interface, with additional
 // methods for testing.
 //
@@ -58,6 +64,9 @@ type Handler struct {
 
 	m           sync.Mutex
 	logMessages []LogMessage
+
+	syncC   chan struct{}
+	waiting []waiter
 
 	t Tester
 }
@@ -164,7 +173,24 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	root.m.Lock()
 	h.attrs.runOn(f)
 
-	root.logMessages = append(root.logMessages, lm)
+	var hadWaiter bool
+	var newWaiters []waiter
+	for _, waiter := range root.waiting {
+		if !hadWaiter && waiter.f(lm) {
+			select {
+			case <-waiter.ctx.Done():
+			case waiter.c <- struct{}{}:
+				hadWaiter = true
+			}
+			close(waiter.c)
+		} else {
+			newWaiters = append(newWaiters, waiter)
+		}
+	}
+	root.waiting = newWaiters
+	if !hadWaiter {
+		root.logMessages = append(root.logMessages, lm)
+	}
 	root.m.Unlock()
 
 	if h.wrapped != nil {
