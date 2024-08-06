@@ -1,6 +1,7 @@
 package slogassert
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -34,7 +35,7 @@ func trueOnlyOnce(f func(LogMessage) bool) func(LogMessage) bool {
 // indicates whether or not it is "correct" according to your tests,
 // and should be removed from the slice of unasserted log
 // messages. Essentially all other assertions provided are just ways
-// of populating this.
+// of populating this or AssertOrWait.
 //
 // The passed-in function will be presented only with the remaining
 // unasserted log messages at the time of the call.
@@ -58,6 +59,59 @@ func (h *Handler) Assert(f func(LogMessage) bool) int {
 	root.logMessages = newMessages
 
 	return matchCount
+}
+
+// AssertOrwait takes in a context and a function that takes a recorded log
+// message and indicates whether or not it is "correct" according to your
+// tests, and should be removed from the slice of unasserted log messages.
+// Essentially all other assertions provided are just ways of populating this
+// or Assert.
+//
+// The passed-in function will be presented only with the remaining unasserted
+// log messages at the time of the call. In the event that none match, it will
+// return after the first matching message is handled (with a return value of
+// 1) or the context is cancelled (with a return value of 0).
+func (h *Handler) AssertOrWait(ctx context.Context, f func(LogMessage) bool) int {
+	h.t.Helper()
+	root := h.root()
+	root.m.Lock()
+	newMessages := []LogMessage{}
+
+	matchCount := 0
+	for _, lm := range root.logMessages {
+		matched := f(lm)
+		if matched {
+			matchCount++
+		} else {
+			newMessages = append(newMessages, lm)
+		}
+	}
+
+	root.logMessages = newMessages
+
+	if matchCount > 0 {
+		root.m.Unlock()
+		return matchCount
+	}
+
+	c := make(chan struct{})
+	root.waiting = append(root.waiting, waiter{
+		ctx: ctx,
+		f:   f,
+		c:   c,
+	})
+	root.m.Unlock()
+
+	if root.syncC != nil {
+		root.syncC <- struct{}{}
+	}
+
+	select {
+	case <-c:
+		return 1
+	case <-ctx.Done():
+		return 0
+	}
 }
 
 // Fail will print out the remaining unasserted messages and pass the
@@ -122,11 +176,38 @@ func (h *Handler) AssertSomeMessage(msg string) int {
 	return matches
 }
 
+// AssertSomeMessageOrWait asserts that some logging events were recorded with
+// the given message or waits for at least one matching message to be recorded.
+// The return value is the number of matched messages if there were any. If
+// there was zero, the test fails.
+func (h *Handler) AssertSomeMessageOrWait(ctx context.Context, msg string) int {
+	h.t.Helper()
+	matches := h.AssertOrWait(ctx, func(lm LogMessage) bool {
+		return lm.Message == msg
+	})
+	if matches == 0 {
+		h.Fail("No logs with message %q found", msg)
+	}
+	return matches
+}
+
 // AssertMessage asserts a logging message recorded with the giving
 // logging message.
 func (h *Handler) AssertMessage(msg string) {
 	h.t.Helper()
 	matches := h.Assert(trueOnlyOnce(func(lm LogMessage) bool {
+		return lm.Message == msg
+	}))
+	if matches == 0 {
+		h.Fail("No logs with message %q found", msg)
+	}
+}
+
+// AssertMessageOrWait asserts a logging message recorded with the giving
+// logging message or waits for at least one matching message to be recorded.
+func (h *Handler) AssertMessageOrWait(ctx context.Context, msg string) {
+	h.t.Helper()
+	matches := h.AssertOrWait(ctx, trueOnlyOnce(func(lm LogMessage) bool {
 		return lm.Message == msg
 	}))
 	if matches == 0 {
@@ -146,6 +227,19 @@ func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
 	}
 }
 
+// AssertPreciseOrWait takes a LogMessageMatch and asserts the first log
+// message that matches it or waits for at least one matching message to be
+// recorded.
+func (h *Handler) AssertPreciseOrWait(ctx context.Context, lmm LogMessageMatch) {
+	h.t.Helper()
+	matches := h.AssertOrWait(ctx, trueOnlyOnce(func(lm LogMessage) bool {
+		return lmm.Matches(lm)
+	}))
+	if matches == 0 {
+		h.Fail("No logs matching filter were found")
+	}
+}
+
 // AssertSomePrecise asserts all the messages in the log that match
 // the LogMessageMatch criteria. The return value is th enumber of
 // matched messages if there were any. (If there aren't any this fails
@@ -153,6 +247,21 @@ func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
 func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) int {
 	h.t.Helper()
 	matches := h.Assert(func(lm LogMessage) bool {
+		return lmm.Matches(lm)
+	})
+	if matches == 0 {
+		h.Fail("No logs matching filter %#v were found", lmm)
+	}
+	return matches
+}
+
+// AssertSomePreciseOrWait asserts all the messages in the log that match the
+// LogMessageMatch criteria or waits for at least one matching message to be
+// recorded. The return value is th enumber of matched messages if there were
+// any. (If there aren't any this fails the test.)
+func (h *Handler) AssertSomePreciseOrWait(ctx context.Context, lmm LogMessageMatch) int {
+	h.t.Helper()
+	matches := h.AssertOrWait(ctx, func(lm LogMessage) bool {
 		return lmm.Matches(lm)
 	})
 	if matches == 0 {
