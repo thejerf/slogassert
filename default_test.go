@@ -2,9 +2,10 @@ package slogassert_test
 
 import (
 	"context"
-	"github.com/thejerf/slogassert"
 	"log/slog"
 	"testing"
+
+	"github.com/thejerf/slogassert"
 )
 
 // fakeTestingT is a testing.T used in the runnable example to demostrate usage
@@ -63,7 +64,10 @@ func Test_NewDefault(t *testing.T) {
 	})
 
 	t.Run("With custom slog handler", func(t *testing.T) {
-		handler := slogassert.New(t, slog.LevelDebug, nil)
+		handler := slogassert.New(&slogassert.HandlerOptions{
+			T:       t,
+			Leveler: slog.LevelDebug,
+		})
 		slog.SetDefault(slog.New(handler))
 
 		t.Run("subtest", func(t *testing.T) {
@@ -79,7 +83,10 @@ func Test_NewDefault(t *testing.T) {
 	})
 
 	t.Run("With wrapped logger", func(t *testing.T) {
-		handler := slogassert.New(t, slog.LevelDebug, nil)
+		handler := slogassert.New(&slogassert.HandlerOptions{
+			T:       t,
+			Leveler: slog.LevelDebug,
+		})
 		defaultHandler := slogassert.NewDefault(t, slogassert.WithWrapped(handler))
 
 		slog.Info("This should be captured")

@@ -9,7 +9,10 @@ Normal usage looks like this:
 	func TestSomething(t *testing.T) {
 	     // This automatically registers a Cleanup function to assert
 	     // that all log messages are accounted for.
-	     handler := slogassert.New(t, slog.LevelWarn)
+	     handler := slogassert.New(&HandlerOptions{
+			T: t,
+			Leveler: slog.LevelWarn,
+		 })
 	     logger := slog.New(handler)
 
 	     // inject the logger into your test code and run it
@@ -54,7 +57,8 @@ type Handler struct {
 	leveler      slog.Leveler
 	currentGroup []string
 	// group -> attrs in that group, "" = default group
-	attrs *groupedAttrs
+	attrs       *groupedAttrs
+	detectDupes bool
 
 	m           sync.Mutex
 	logMessages []LogMessage
@@ -74,22 +78,43 @@ type Tester interface {
 	Fatalf(string, ...any)
 }
 
-// New creates a new testing logger, logging with the given level.
+// HandlerOptions is the struct passed in as the sole argument to New.
 //
-// If wrapped is not nil, Handle calls will be passed down to that
-// handler as well.
+// T must satisfy the Tester interface and T must not be nil.
+//
+// Leveler must satisfy the slog.Leveler interface. It will be used to
+// determine whether to log a message via Enabled.
+//
+// Wrapped optionally contains a slog.Handler that Handler will wrap. If
+// Wrapped is not nil, Handle calls will be passed down to that handler as
+// well.
+//
+// DetectDupes is a flag to determine whether the Handler will panic when it
+// encounters slog.Attrs with duplicate keys in the same group.
+type HandlerOptions struct {
+	T           Tester
+	Leveler     slog.Leveler
+	Wrapped     slog.Handler
+	DetectDupes bool
+}
+
+// New creates a new testing logger. See HandlerOptions for the arguments.
 //
 // It is recommended to generally call defer handler.AssertEmpty() on
 // the result of this call.
-func New(t Tester, leveler slog.Leveler, wrapped slog.Handler) *Handler {
-	if t == nil {
+func New(options *HandlerOptions) *Handler {
+	if options == nil {
+		panic("options must not be nil for a slogtest.Handler")
+	}
+	if options.T == nil {
 		panic("t must not be nil for a slogtest.Handler")
 	}
 	handler := &Handler{
-		leveler: leveler,
-		attrs:   &groupedAttrs{groups: map[string]*groupedAttrs{}},
-		t:       t,
-		wrapped: wrapped,
+		leveler:     options.Leveler,
+		attrs:       &groupedAttrs{groups: map[string]*groupedAttrs{}},
+		t:           options.T,
+		wrapped:     options.Wrapped,
+		detectDupes: options.DetectDupes,
 	}
 	return handler
 }
@@ -98,7 +123,7 @@ func New(t Tester, leveler slog.Leveler, wrapped slog.Handler) *Handler {
 // hard-coded attributes.
 func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	handler := h.child()
-	handler.attrs.set(h.currentGroup, attrs...)
+	handler.attrs.set(h.detectDupes, h.currentGroup, attrs...)
 
 	if h.wrapped != nil {
 		handler.wrapped = h.wrapped.WithAttrs(attrs)
@@ -188,6 +213,7 @@ func (h *Handler) child() *Handler {
 		attrs:        h.attrs.clone(),
 		leveler:      h.leveler,
 		wrapped:      h.wrapped,
+		detectDupes:  h.detectDupes,
 	}
 }
 
@@ -252,7 +278,7 @@ type groupedAttrs struct {
 	groups map[string]*groupedAttrs
 }
 
-func (ga *groupedAttrs) set(groupkeys []string, attr ...slog.Attr) {
+func (ga *groupedAttrs) set(detectDupes bool, groupkeys []string, attr ...slog.Attr) {
 	target := ga
 	for _, group := range groupkeys {
 		newTarget := target.groups[group]
@@ -265,7 +291,16 @@ func (ga *groupedAttrs) set(groupkeys []string, attr ...slog.Attr) {
 		target = newTarget
 	}
 
-	target.attrs = append(target.attrs, attr...)
+	for _, newAttr := range attr {
+		if detectDupes {
+			for _, oldAttr := range target.attrs {
+				if oldAttr.Key == newAttr.Key {
+					panic(fmt.Sprintf("Collision between old slog.Attr and new slog.Attr: %s", oldAttr.Key))
+				}
+			}
+		}
+		target.attrs = append(target.attrs, newAttr)
+	}
 }
 
 func (ga *groupedAttrs) clone() *groupedAttrs {

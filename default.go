@@ -13,6 +13,7 @@ type config struct {
 	level       slog.Leveler
 	assertEmpty bool
 	wrapped     slog.Handler
+	detectDupes bool
 }
 
 // An Option allows for configuration of the default handler created
@@ -47,6 +48,14 @@ func WithWrapped(wrapped slog.Handler) Option {
 	}
 }
 
+// WithDetectDupes is a functional option for [NewDefault] that configures the
+// handler to panic on detection of duplicate slog.Attr keys.
+func WithDetectDupes() Option {
+	return func(c *config) {
+		c.detectDupes = true
+	}
+}
+
 // NewDefault is a helper function for tests that creates a slogassert [Handler]
 // and sets it as the default slog handler
 // Once the test is complete it will attempt to restore the previous handler.
@@ -74,13 +83,18 @@ func NewDefault(t testing.TB, opts ...Option) *Handler {
 		level:       slog.LevelDebug,
 		assertEmpty: false,
 		wrapped:     nil,
+		detectDupes: false,
 	}
 
 	for _, opt := range opts {
 		opt(&c)
 	}
-
-	handler := New(t, c.level, c.wrapped)
+	handler := New(&HandlerOptions{
+		T:           t,
+		Leveler:     c.level,
+		Wrapped:     c.wrapped,
+		DetectDupes: c.detectDupes,
+	})
 
 	// take a copy of the original logger and flags so that we can restore
 	// once the test is complete
