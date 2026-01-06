@@ -136,7 +136,7 @@ func (h *Handler) AssertMessage(msg string) {
 
 // AssertPrecise takes a LogMessageMatch and asserts the first log
 // message that matches it.
-func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
+func (h *Handler) AssertPrecise(lmm LogMessageMatcher) {
 	h.t.Helper()
 	matches := h.Assert(trueOnlyOnce(func(lm LogMessage) bool {
 		return lmm.Matches(lm)
@@ -150,7 +150,7 @@ func (h *Handler) AssertPrecise(lmm LogMessageMatch) {
 // the LogMessageMatch criteria. The return value is th enumber of
 // matched messages if there were any. (If there aren't any this fails
 // the test.)
-func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) int {
+func (h *Handler) AssertSomePrecise(lmm LogMessageMatcher) int {
 	h.t.Helper()
 	matches := h.Assert(func(lm LogMessage) bool {
 		return lmm.Matches(lm)
@@ -159,6 +159,12 @@ func (h *Handler) AssertSomePrecise(lmm LogMessageMatch) int {
 		h.Fail("No logs matching filter %#v were found", lmm)
 	}
 	return matches
+}
+
+// A LogMessageMatcher is used to match log messages in assertions.
+// It is satisfied by LogMessageMatch, however is provided so custom matchers can also be provided.
+type LogMessageMatcher interface {
+	Matches(lm LogMessage) bool
 }
 
 // LogMessageMatch defines a precise message to match.
